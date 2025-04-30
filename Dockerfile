@@ -17,7 +17,7 @@ COPY . .
 RUN npm run build
 
 # Expose the port that the app will run on.  Dokploy will route to this port.
-EXPOSE 3001
+EXPOSE 8080
 
 # Define the command to run the application.  Use serve for production
 CMD ["npm", "run", "start"]
