@@ -1,17 +1,23 @@
-# Step 1: Use an official Node.js image as the base image
-FROM node:16-alpine as build
+# Use a Node.js runtime as the base image
+FROM node:18-alpine
 
-# Set working directory
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json for dependency installation
-COPY package.json package-lock.json ./
+# Copy package.json and package-lock.json to the working directory
+COPY package*.json ./
 
 # Install dependencies
-RUN npm install --legacy-peer-deps
+RUN npm install --force
 
-# Copy the rest of your React project files
+# Copy the entire React application code to the working directory
 COPY . .
 
-# Build the application
-RUN npm run build --force
+# Build the React application for production
+RUN npm run build
+
+# Expose the port that the app will run on.  Dokploy will route to this port.
+EXPOSE 3000
+
+# Define the command to run the application.  Use serve for production
+CMD ["npm", "run", "start"]
