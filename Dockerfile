@@ -8,10 +8,16 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies.  Use --no-cache for smaller image size.
-RUN npm install --force
+RUN npm install --no-cache
 
 # Copy the entire application source code
 COPY . .
+
+# Debugging commands:
+RUN pwd
+RUN ls -al
+RUN echo "Current directory contents:"
+RUN find . -maxdepth 3 -type f -print # List files
 
 # Build the application for production
 RUN npm run build
