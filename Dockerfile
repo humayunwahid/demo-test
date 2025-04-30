@@ -1,38 +1,33 @@
-# Step 1: Use an official Node.js image as the base image
-FROM node:16-alpine as build
+# Use the latest stable Node.js image as the base image
+FROM node:18-alpine AS base
 
-# Set working directory
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json for dependency installation
-COPY package.json package-lock.json ./
+# Copy package.json and package-lock.json (or yarn.lock)
+COPY package*.json ./
 
-# Install dependencies with debugging output
-RUN npm install --legacy-peer-deps
+# Install dependencies.  Use --no-cache for smaller image size.
+RUN npm install --no-cache
 
-# Print directory contents for debugging purposes
-RUN ls -l /app
-
-# Copy the rest of your React project files
+# Copy the entire application source code
 COPY . .
 
-# Check if the build script exists in package.json
-RUN cat package.json | jq '.scripts'
+# Build the application for production
+RUN npm run build
 
-# Run build and capture logs
-RUN npm run build || tail -n 10 /root/.npm/_logs/*-debug.log
+# Use a lightweight Alpine Linux base image for the production stage
+FROM nginx:alpine AS production
 
-# Expose the port that the app will run on
+# Copy the built assets from the builder stage
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Expose the port that Nginx will listen on
 EXPOSE 80
 
-# Use Nginx to serve the built React app
-FROM nginx:alpine
+# Optionally, add a health check (recommended for production)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost/ || exit 1
 
-# Copy build artifacts from the previous stage
-COPY --from=build /app/build /usr/share/nginx/html
-
-# Expose port 80 for the container to be accessed
-EXPOSE 80
-
-# Start Nginx server
+# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
