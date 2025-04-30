@@ -14,7 +14,7 @@ RUN npm install --force
 COPY . .
 
 # Step 6: Build the React app
-RUN npm run build
+RUN npm run build --force
 
 # Step 7: Use a lighter web server image for serving the build
 FROM nginx:alpine
