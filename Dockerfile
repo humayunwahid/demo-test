@@ -1,5 +1,5 @@
 # Use the latest stable Node.js image as the base image
-FROM node:18-alpine AS base
+FROM node:18-alpine AS builder
 
 # Set the working directory in the container
 WORKDIR /app
@@ -16,18 +16,18 @@ COPY . .
 # Build the application for production
 RUN npm run build
 
-# Use a lightweight Alpine Linux base image for the production stage
-FROM nginx:alpine AS production
+# Use a lightweight Nginx image to serve the static assets
+FROM nginx:alpine
 
-# Copy the built assets from the builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Copy the built assets from the 'builder' stage to the Nginx web root
+COPY --from=builder /app/build /usr/share/nginx/html
 
-# Expose the port that Nginx will listen on
+# Expose port 80, the default HTTP port
 EXPOSE 80
 
-# Optionally, add a health check (recommended for production)
+# Optional: Add a health check (recommended for production deployments)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost/ || exit 1
 
-# Start Nginx
+# Start Nginx when the container starts
 CMD ["nginx", "-g", "daemon off;"]
